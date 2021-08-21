@@ -2,6 +2,7 @@ import SwiftUI
 
 let lightGray: Color = Color.init(red: 0.8, green: 0.8, blue: 0.8)
 let darkGray: Color = Color.init(red: 0.2, green: 0.2, blue: 0.2)
+let lightRed: Color = Color.init(red: 1, green: 0.4, blue: 0.4)
 
 struct MainMenu: View
 {
@@ -53,7 +54,7 @@ struct MainMenu: View
                 .foregroundColor(Color.black)
                 .cornerRadius(10)
                 .padding([.bottom], 15)
-                .onTapGesture { currentPage = .sceneMenu }
+                .onTapGesture { currentPage = .ch1_Intro }
             
             
                 
