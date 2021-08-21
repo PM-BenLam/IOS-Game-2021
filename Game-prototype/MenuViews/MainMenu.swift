@@ -2,32 +2,49 @@ import SwiftUI
 
 let lightGray: Color = Color.init(red: 0.8, green: 0.8, blue: 0.8)
 let darkGray: Color = Color.init(red: 0.2, green: 0.2, blue: 0.2)
-let lightRed: Color = Color.init(red: 1, green: 0.4, blue: 0.4)
+let lightBlue: Color = Color.init(red: 0.7, green: 0.9, blue: 1)
 
 struct MainMenu: View
 {
+    @Environment(\.verticalSizeClass) var verticalSizeClass: UserInterfaceSizeClass?
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
+    
     @Binding var currentPage: Page
     
     var body: some View
     {
-        NavigationView
+        if !(horizontalSizeClass == .compact && verticalSizeClass == .regular)
         {
-            VStack
+            Group
             {
-                title
-                
-                buttons
-                    
-                Spacer()
+                Text("請把裝置豎放，以使用主頁")
+                    .font(.title)
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background( Image("laptop1")
-                            .resizable()
-                            .scaledToFill())
-            .edgesIgnoringSafeArea([.top, .bottom])
-            
+            .background(lightBlue)
+            .edgesIgnoringSafeArea([.all])
         }
-    
+        else
+        {
+            NavigationView
+            {
+                VStack
+                {
+                    title
+                    
+                    buttons
+                        
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background( Image("laptop1")
+                                .resizable()
+                                .scaledToFill())
+                .edgesIgnoringSafeArea(.all)
+            }
+        }
     }
     
     var title: some View
@@ -54,7 +71,7 @@ struct MainMenu: View
                 .foregroundColor(Color.black)
                 .cornerRadius(10)
                 .padding([.bottom], 15)
-                .onTapGesture { currentPage = .ch1_Intro }
+                .onTapGesture { withAnimation { currentPage = .gameView } }
             
             
                 

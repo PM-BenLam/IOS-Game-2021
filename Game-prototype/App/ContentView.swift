@@ -12,10 +12,12 @@ struct ContentView: View
         {
         case .mainMenu:
             MainMenu(currentPage: $currentPage)
-        case .sceneMenu:
-            SceneMenu(currentPage: $currentPage)
-        case .scene1:
-            Scene1()
+                .transition(.opacity)
+            
+        case .gameView:
+            GameView(currentPage: $currentPage)
+                .transition(.opacity)
+        
         }
     }
 }
@@ -23,6 +25,5 @@ struct ContentView: View
 enum Page
 {
     case mainMenu
-    case sceneMenu
-    case scene1
+    case gameView
 }
