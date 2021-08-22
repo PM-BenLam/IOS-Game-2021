@@ -12,12 +12,14 @@
 		4C13D84326BAF1BD00C2C855 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C13D84226BAF1BD00C2C855 /* Assets.xcassets */; };
 		4C13D84626BAF1BD00C2C855 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C13D84526BAF1BD00C2C855 /* Preview Assets.xcassets */; };
 		4C2295C626C5710B0090BA2A /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2295C526C5710B0090BA2A /* Utilities.swift */; };
+		4C912E0926D23B68001BB4D5 /* LevelTileSet.sks in Resources */ = {isa = PBXBuildFile; fileRef = 4C912E0826D23B68001BB4D5 /* LevelTileSet.sks */; };
 		4CB1270A26CFBC6800DAC3E1 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1270926CFBC6800DAC3E1 /* GameView.swift */; };
 		4CB1270C26CFCE0800DAC3E1 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1270B26CFCE0800DAC3E1 /* GameScene.swift */; };
 		4CE2FC3726BEC62A0046683E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE2FC3626BEC62A0046683E /* MainMenu.swift */; };
 		4CE2FC3926BEC6580046683E /* SettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE2FC3826BEC6580046683E /* SettingView.swift */; };
 		4CE2FC3B26BED1040046683E /* CreditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE2FC3A26BED1030046683E /* CreditView.swift */; };
 		4CE2FC4026BED2660046683E /* InfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE2FC3F26BED2660046683E /* InfoView.swift */; };
+		4CFA77A226D20A0D0060D76E /* Level.sks in Resources */ = {isa = PBXBuildFile; fileRef = 4CFA77A126D20A0D0060D76E /* Level.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,12 +30,14 @@
 		4C13D84526BAF1BD00C2C855 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4C13D84726BAF1BD00C2C855 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4C2295C526C5710B0090BA2A /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		4C912E0826D23B68001BB4D5 /* LevelTileSet.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = LevelTileSet.sks; sourceTree = "<group>"; };
 		4CB1270926CFBC6800DAC3E1 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		4CB1270B26CFCE0800DAC3E1 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		4CE2FC3626BEC62A0046683E /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		4CE2FC3826BEC6580046683E /* SettingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingView.swift; sourceTree = "<group>"; };
 		4CE2FC3A26BED1030046683E /* CreditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditView.swift; sourceTree = "<group>"; };
 		4CE2FC3F26BED2660046683E /* InfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoView.swift; sourceTree = "<group>"; };
+		4CFA77A126D20A0D0060D76E /* Level.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Level.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +122,8 @@
 			children = (
 				4CB1270926CFBC6800DAC3E1 /* GameView.swift */,
 				4CB1270B26CFCE0800DAC3E1 /* GameScene.swift */,
+				4CFA77A126D20A0D0060D76E /* Level.sks */,
+				4C912E0826D23B68001BB4D5 /* LevelTileSet.sks */,
 			);
 			path = GameViews;
 			sourceTree = "<group>";
@@ -180,6 +186,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C13D84626BAF1BD00C2C855 /* Preview Assets.xcassets in Resources */,
+				4CFA77A226D20A0D0060D76E /* Level.sks in Resources */,
+				4C912E0926D23B68001BB4D5 /* LevelTileSet.sks in Resources */,
 				4C13D84326BAF1BD00C2C855 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

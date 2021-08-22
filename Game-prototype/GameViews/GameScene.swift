@@ -1,25 +1,27 @@
 import Foundation
 import SpriteKit
-
+import SwiftUI
 
 class GameScene: SKScene
 {
+    let stopSymbol = SKSpriteNode(imageNamed: "stopSign")
+    let transparentGray = SKSpriteNode(color: UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5), size: CGSize(width: 1, height: 1))
+    
+    func createStopScreen()
+    {
+        stopSymbol.zPosition = 210
+        stopSymbol.size = CGSize(width: 50, height: 50)
+        stopSymbol.position = CGPoint(x: frame.midX, y: frame.midY)
+        
+        transparentGray.zPosition = 200
+        transparentGray.size = frame.size
+        transparentGray.position = CGPoint(x: frame.midX, y: frame.midY)
+        
+        addChild(stopSymbol)
+        addChild(transparentGray)
+    }
     
     let player = SKSpriteNode(color: UIColor.red, size: CGSize(width: 50, height: 50))
-    
-    var backgroundShouldMove = false
-    
-    override func didMove(to view: SKView)
-    {
-        
-        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
-        
-        createBackground()
-        
-        createGround()
-        
-        createPlayer()
-    }
     
     func createPlayer()
     {
@@ -34,10 +36,36 @@ class GameScene: SKScene
         addChild(player)
     }
     
+    let leftButton = SKSpriteNode(color: .darkGray, size: CGSize(width: 30, height: 30))
+    let rightButton = SKSpriteNode(color: .darkGray, size: CGSize(width: 30, height: 30))
+    let jumpButton = SKSpriteNode(color: .darkGray, size: CGSize(width: 30, height: 30))
+   
+    func createController()
+    {
+        let startX = frame.minX + 10
+        let startY = frame.minY + 70
+        
+        leftButton.anchorPoint = CGPoint(x: 0, y: 0)
+        leftButton.position = CGPoint(x: startX, y: startY)
+        leftButton.zPosition = 100
+        addChild(leftButton)
+        
+        rightButton.anchorPoint = CGPoint(x: 1, y: 0)
+        rightButton.position = CGPoint(x: startX + 100, y: startY)
+        rightButton.zPosition = 100
+        addChild(rightButton)
+        
+        let midX = (leftButton.position.x + rightButton.position.x) / 2
+        
+        jumpButton.anchorPoint = CGPoint(x: 0.5, y: 0)
+        jumpButton.position = CGPoint(x: midX, y: startY)
+        jumpButton.zPosition = 100
+        addChild(jumpButton)
+    }
+    
     let backgroundTexture = SKTexture(imageNamed: "background")
-    
     let backgrounds = [SKSpriteNode(imageNamed: "background"), SKSpriteNode(imageNamed: "background")]
-    
+
     func createBackground()
     {
         let topSky = SKSpriteNode(color: UIColor(hue: 0.55, saturation: 0.14, brightness: 0.97, alpha: 1), size: CGSize(width: frame.width, height: frame.height * 0.67))
@@ -68,63 +96,164 @@ class GameScene: SKScene
         backgrounds[1].position = CGPoint(x: backgroundTexture.size().width, y: 100)
     }
     
-    let groundTexture = SKTexture(imageNamed: "ground")
-    
-    let grounds = [SKSpriteNode(imageNamed: "ground"), SKSpriteNode(imageNamed: "ground")]
+    let ground = SKSpriteNode(fileNamed: "Level")?.childNode(withName: "ground")
     
     func createGround()
     {
-        for ground in grounds
-        {
-            
-            ground.zPosition = -10
-            
-            ground.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            
-            ground.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: groundTexture.size().width, height: groundTexture.size().height))
-            
-            ground.physicsBody?.isDynamic = false
-            ground.physicsBody?.affectedByGravity = false;
-        }
+        ground?.move(toParent: self)
         
-        grounds[0].position = CGPoint(x: groundTexture.size().width / 2.0, y: frame.maxY / 6 )
+        ground?.zPosition = -10
         
+        ground?.physicsBody?.isDynamic = false
+        ground?.physicsBody?.affectedByGravity = false
         
-        grounds[1].position = CGPoint(x: 3 * (groundTexture.size().width / 2.0), y: frame.maxY / 6 )
-        
-        addChild(grounds[0])
-        
-        addChild(grounds[1])
-        
+        ground?.position = CGPoint(x: frame.midX, y: frame.maxY / 6 )
     }
+    
+    
+    override func didMove(to view: SKView)
+    {
+        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        
+        createBackground()
+        
+        createGround()
+        
+        createController()
+        
+        createPlayer()
+    }
+    
+    var leftButtonOnTouch = false
+    var rightButtonOnTouch = false
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
-        let jumpForce = CGVector(dx: 0, dy: 500)
-
-        player.physicsBody?.applyImpulse(jumpForce)
-        
+        for touch in touches
+        {
+            let location = touch.location(in: self)
+            
+            let jumpForce = CGVector(dx: 0, dy: 500)
+            
+            if jumpButton.contains(location)
+            {
+                player.physicsBody?.applyImpulse(jumpForce)
+            }
+            
+            if leftButton.contains(location)
+            {
+                leftButtonOnTouch = true
+            }
+            
+            if rightButton.contains(location)
+            {
+                rightButtonOnTouch = true
+            }
+        }
     }
     
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        leftButtonOnTouch = false
+        rightButtonOnTouch = false
+    }
+
     override func update(_ currentTime: TimeInterval)
     {
         
-        MoveLoop(duration: 5, nodes: grounds)
-        MoveLoop(duration: 20, nodes: backgrounds)
-        
-    }
-    
-    func MoveLoop(duration: Double, nodes: [SKSpriteNode])
-    {
-        let moveLeft = SKAction.moveBy(x: -groundTexture.size().width, y: 0, duration: duration)
-        let moveReset = SKAction.moveBy(x: groundTexture.size().width, y: 0, duration: 0)
-        let moveLoop = SKAction.sequence([moveLeft, moveReset])
-        
-        if !nodes[0].hasActions() && !nodes[1].hasActions()
+        if gameIsPaused
         {
-            nodes[0].run(moveLoop)
-            nodes[1].run(moveLoop)
+            if !self.children.contains(stopSymbol) && !self.children.contains(transparentGray)
+            {
+                createStopScreen()
+            }
+            
+            for node in self.children
+            {
+                if node != stopSymbol && node != transparentGray
+                {
+                    node.physicsBody?.isResting = true
+                    node.isPaused = true
+                }
+            }
+                
+        } else
+        {
+            if self.children.contains(stopSymbol) && self.children.contains(transparentGray)
+            {
+                stopSymbol.removeFromParent()
+                transparentGray.removeFromParent()
+            }
+            
+            for node in self.children
+            {
+                if node != stopSymbol && node != transparentGray
+                {
+                    node.physicsBody?.isResting = false
+                    node.isPaused = false
+                }
+            }
+        }
+       
+        if leftButtonOnTouch == true && !leftButton.hasActions()
+        {
+            MoveBackground(direction: "right", distance: 1)
+            MoveGround(direction: "right", distance: 15)
+        }
+        
+        if rightButtonOnTouch == true && !rightButton.hasActions()
+        {
+            MoveBackground(direction: "left", distance: 1)
+            MoveGround(direction: "left", distance: 15)
         }
     }
+   
+    func MoveBackground(direction: String, distance: CGFloat)
+    {
+        let moveLeft: SKAction
+        let moveRight: SKAction
+        
+        moveLeft = SKAction.moveBy(x: -distance, y: 0, duration: 0.1)
+        moveRight = SKAction.moveBy(x: distance, y: 0, duration: 0.1)
+        
+        if direction == "left"
+        {
+            if !backgrounds[0].hasActions() && !backgrounds[1].hasActions()
+            {
+                backgrounds[0].run(moveLeft)
+                backgrounds[1].run(moveLeft)
+            }
+        } else if direction == "right"
+        {
+            if !backgrounds[0].hasActions() && !backgrounds[1].hasActions()
+            {
+                backgrounds[0].run(moveRight)
+                backgrounds[1].run(moveRight)
+            }
+        }
+        
+    }
 
+    func MoveGround(direction: String, distance: CGFloat)
+    {
+        let moveLeft: SKAction
+        let moveRight: SKAction
+        
+        moveLeft = SKAction.moveBy(x: -distance, y: 0, duration: 0.1)
+        moveRight = SKAction.moveBy(x: distance, y: 0, duration: 0.1)
+        
+        
+        if !(ground?.hasActions())!
+        {
+            
+            if direction == "left"
+            {
+                ground?.run(moveLeft)
+                
+            } else if direction == "right"
+            {
+                ground?.run(moveRight)
+            }
+        }
+    }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 // A sample SwiftUI creating a GameScene and sizing it
 // at 300x400 points
 
+var gameIsPaused = false
 
 struct GameView: View
 {
@@ -56,10 +57,32 @@ struct GameView: View
                                 .padding([.leading], 25)
                                 .padding([.top], 15)
                                 .onTapGesture { withAnimation { currentPage = .mainMenu } }
-                                
+                            
                             Spacer()
                         }
-                
+                        
+                        HStack
+                        {
+                            Text("停止/繼續遊戲")
+                                .padding(10)
+                                .background(Color.init(red: 0.7, green: 0.7, blue: 0.7, opacity: 0.3))
+                                .cornerRadius(5)
+                                .shadow(radius: 10)
+                                .padding([.leading], 25)
+                                .padding([.top], 15)
+                                .onTapGesture
+                                {
+                                    if gameIsPaused
+                                    {
+                                        gameIsPaused = false
+                                    } else
+                                    {
+                                        gameIsPaused = true 
+                                    }
+                                }
+                            
+                            Spacer()
+                        }
                         Spacer()
                     }
                     
