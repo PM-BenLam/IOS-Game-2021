@@ -39,7 +39,7 @@ struct MainMenu: View
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background( Image("laptop1")
+                .background( Image("laptop")
                                 .resizable()
                                 .scaledToFill())
                 .edgesIgnoringSafeArea(.all)
