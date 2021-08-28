@@ -2,98 +2,129 @@
 import SpriteKit
 import SwiftUI
 
-// A sample SwiftUI creating a GameScene and sizing it
-// at 300x400 points
-
-var gameIsPaused = false
-
 struct GameView: View
 {
     @Environment(\.verticalSizeClass) var verticalSizeClass: UserInterfaceSizeClass?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass: UserInterfaceSizeClass?
-    
-    @Binding var currentPage: Page
 
+    @Binding var currentPage: Page
     
-    var scene: SKScene
+    @ObservedObject var gameManager = GameManager.sharedInstance
+    
+    var scene1: SKScene
     {
-        
-        let scene = GameScene()
-        scene.size = CGSize(width: 400, height: 300)
-        scene.scaleMode = .aspectFill
-        return scene
+        let scene1 = Level1()
+        scene1.size = CGSize(width: 400, height: 300)
+        scene1.scaleMode = .aspectFill
+        return scene1
+    }
+    
+    var scene2: SKScene
+    {
+        let scene2 = Level2()
+        scene2.size = CGSize(width: 400, height: 300)
+        scene2.scaleMode = .aspectFill
+        return scene2
+    }
+    
+    var sceneView: some View
+    {
+        switch gameManager.gameLevel
+        {
+        case 1:
+            return SpriteView(scene: scene1)
+        case 2:
+            return SpriteView(scene: scene2)
+        default:
+            return SpriteView(scene: scene1)
+        }
         
     }
     
-        
     var body: some View
     {
-        Group
+        if !gameManager.gameIsOver
         {
-            if horizontalSizeClass == .compact && verticalSizeClass == .regular
+            Group
             {
-                
-                Text("請把裝置橫放，以獲得最佳的遊戲體驗")
-                    .font(.title)
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.center)
-            }
-            else
-            {
-                ZStack
+                if horizontalSizeClass == .compact && verticalSizeClass == .regular
                 {
-                    SpriteView(scene: scene)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
-                    VStack
+                    Text("請把裝置橫放，以獲得最佳的遊戲體驗")
+                        .font(.title)
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
+                }
+                else
+                {
+                    ZStack
                     {
-                        HStack
+                    
+                        sceneView
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        
+                        VStack
                         {
-                            Text("離開遊戲")
-                                .padding(10)
-                                .background(Color.init(red: 0.7, green: 0.7, blue: 0.7, opacity: 0.3))
-                                .foregroundColor(.black)
-                                .cornerRadius(5)
-                                .shadow(radius: 10)
-                                .padding([.leading], 25)
-                                .padding([.top], 15)
-                                .onTapGesture { withAnimation { currentPage = .mainMenu } }
+                            HStack
+                            {
+                                Text("離開遊戲")
+                                    .padding(10)
+                                    .background(Color.init(red: 0.7, green: 0.7, blue: 0.7, opacity: 0.3))
+                                    .foregroundColor(.black)
+                                    .cornerRadius(5)
+                                    .shadow(radius: 10)
+                                    .padding([.leading], 25)
+                                    .padding([.top], 15)
+                                    .onTapGesture
+                                    {
+                                        gameManager.reset()
+                                        withAnimation {
+                                        currentPage = .mainMenu }
+                                        
+                                    }
+                                
+                                Spacer()
+                            }
                             
+                            HStack
+                            {
+                                Text("停止/繼續遊戲")
+                                    .padding(10)
+                                    .background(Color.init(red: 0.7, green: 0.7, blue: 0.7, opacity: 0.3))
+                                    .foregroundColor(.black)
+                                    .cornerRadius(5)
+                                    .shadow(radius: 10)
+                                    .padding([.leading], 25)
+                                    .padding([.top], 15)
+                                    .onTapGesture
+                                    {
+                                        if GameScene.gameIsPaused
+                                        {
+                                            GameScene.gameIsPaused = false
+                                        } else
+                                        {
+                                            GameScene.gameIsPaused = true
+                                        }
+                                    }
+                                
+                                Spacer()
+                            }
                             Spacer()
                         }
                         
-                        HStack
-                        {
-                            Text("停止/繼續遊戲")
-                                .padding(10)
-                                .background(Color.init(red: 0.7, green: 0.7, blue: 0.7, opacity: 0.3))
-                                .foregroundColor(.black)
-                                .cornerRadius(5)
-                                .shadow(radius: 10)
-                                .padding([.leading], 25)
-                                .padding([.top], 15)
-                                .onTapGesture
-                                {
-                                    if gameIsPaused
-                                    {
-                                        gameIsPaused = false
-                                    } else
-                                    {
-                                        gameIsPaused = true 
-                                    }
-                                }
-                            
-                            Spacer()
-                        }
-                        Spacer()
                     }
-                    
                 }
             }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(lightBlue)
+                .edgesIgnoringSafeArea([.all])
+             
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(lightBlue)
-        .edgesIgnoringSafeArea([.all])
+        else
+        {
+            GameOver(currentPage: $currentPage)
+        }
+        
         
     }
 }

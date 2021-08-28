@@ -2,10 +2,26 @@ import Foundation
 import SpriteKit
 import SwiftUI
 
+class GameManager: ObservableObject
+{
+    static let sharedInstance = GameManager()
+    @Published var gameIsOver = false
+    @Published var gameLevel = 1
+    
+    func reset()
+    {
+        gameIsOver = false
+        gameLevel = 1
+    }
+    
+    private init() { }
+}
 
 class GameScene: SKScene
 {
-    /// Initialization
+    let gameManager = GameManager.sharedInstance
+
+    static var gameIsPaused = false
     
     let stopSymbol = SKSpriteNode(imageNamed: "stopSign")
     let transparentGray = SKSpriteNode(color: UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5), size: CGSize(width: 1, height: 1))
@@ -24,15 +40,22 @@ class GameScene: SKScene
         addChild(transparentGray)
     }
     
-    let player = SKSpriteNode(color: UIColor.red, size: CGSize(width: 25, height: 40))
-    
+    let playerTextures = [SKTexture(imageNamed: "leftIdle"),
+                         SKTexture(imageNamed: "rightIdle"),
+                         SKTexture(imageNamed: "leftRun1"),
+                         SKTexture(imageNamed: "rightRun1"),
+                         SKTexture(imageNamed: "leftRun2"),
+                         SKTexture(imageNamed: "rightRun2")]
+ 
+    let player = SKSpriteNode(texture: nil)
+
     func createPlayer()
     {
-        print("Hello")
         player.zPosition = 2
         player.position = CGPoint(x: frame.midX, y: frame.midY)
-        
-        player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
+        player.texture = playerTextures[1]
+        player.size = player.texture!.size()
+        player.physicsBody = SKPhysicsBody(rectangleOf: player.texture!.size())
         player.physicsBody?.mass = 1;
         player.physicsBody?.allowsRotation = false;
         player.physicsBody?.affectedByGravity = true;
@@ -118,13 +141,15 @@ class GameScene: SKScene
     
     var tileArray: [SKSpriteNode] = []
     
-    func createLevelMap()
+    func createLevelMap(fileName: String, tileMapName: String)
     {
-        let main = SKSpriteNode(fileNamed: "LevelMap")?.childNode(withName: "Level1") as! SKTileMapNode
+        let tileMap = SKSpriteNode(fileNamed: fileName)?.childNode(withName: tileMapName) as! SKTileMapNode
         
-        addPhysicBodyToTileMap(tileMap: main)
+        addPhysicBodyToTileMap(tileMap: tileMap)
         
     }
+    
+    var portal = SKNode()
     
     func addPhysicBodyToTileMap(tileMap: SKTileMapNode)
     {
@@ -137,27 +162,34 @@ class GameScene: SKScene
                     let tileTexture = tileDefinition.textures[0]
                     
                     let tileNode = SKSpriteNode(texture: tileTexture)
-                    
+                        
                     tileNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-                    
+                        
                     let x = CGFloat(col) * tileMap.tileSize.width
                     let y = CGFloat(row) * tileMap.tileSize.height
                     
                     tileNode.position = CGPoint(x: x, y: y)
-                    tileNode.physicsBody = SKPhysicsBody(texture: tileTexture, size: tileTexture.size())
                     
-                    tileNode.physicsBody?.isDynamic = false
-                    tileNode.physicsBody?.affectedByGravity = false
+                    if tileNode.texture?.description != "<SKTexture> 'portal' (16 x 32)"
+                    {
+                        tileNode.physicsBody = SKPhysicsBody(texture: tileTexture, size: tileTexture.size())
+                            
+                        tileNode.physicsBody?.isDynamic = false
+                        tileNode.physicsBody?.affectedByGravity = false
+                            
+                    } else
+                    {
+                        portal = tileNode
+                    }
                     
                     tileNode.move(toParent: self)
                     
                     tileArray.append(tileNode)
-                    
                 }
             }
         }
     }
-    
+
     func createCamera()
     {
         let cameraNode = SKCameraNode()
@@ -168,16 +200,14 @@ class GameScene: SKScene
         self.camera = cameraNode
     }
     
+    /// initialization
     override func didMove(to view: SKView)
     {
-        
         self.view?.isMultipleTouchEnabled = true
         
         physicsBody = SKPhysicsBody()
         
         createBackground()
-        
-        createLevelMap()
         
         createController()
         
@@ -189,8 +219,26 @@ class GameScene: SKScene
     
     var leftButtonOnTouch = false
     var rightButtonOnTouch = false
-
-    var selectedNodes:[UITouch:SKSpriteNode] = [:]
+    var cameraStartPosition: CGPoint = CGPoint.zero
+    
+    override func update(_ currentTime: TimeInterval)
+    {
+        cameraStartPosition = camera?.position ?? CGPoint.zero
+        
+        showPauseScreen()
+        
+        changeToIdleTexture()
+        
+        if leftButtonOnTouch == true && !leftButton.hasActions()
+        {
+            MovePlayer(direction: "right", distance: 10)
+        }
+        
+        if rightButtonOnTouch == true && !rightButton.hasActions()
+        {
+            MovePlayer(direction: "left", distance: 10)
+        }
+    }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
@@ -264,29 +312,6 @@ class GameScene: SKScene
         }
     }
 
-    var cameraStartPosition: CGPoint = CGPoint.zero
-    
-    override func update(_ currentTime: TimeInterval)
-    {
-        cameraStartPosition = camera?.position ?? CGPoint.zero
-        
-        showPauseScreen()
-        
-        if player.position.y < 50
-        {
-            
-        }
-        
-        if leftButtonOnTouch == true && !leftButton.hasActions()
-        {
-            MovePlayer(direction: "right", distance: 15)
-        }
-        
-        if rightButtonOnTouch == true && !rightButton.hasActions()
-        {
-            MovePlayer(direction: "left", distance: 15)
-        }
-    }
    
     override func didSimulatePhysics()
     {
@@ -310,7 +335,7 @@ class GameScene: SKScene
     
     func showPauseScreen()
     {
-        if gameIsPaused
+        if GameScene.gameIsPaused
         {
             if !self.children.contains(stopSymbol) && !self.children.contains(transparentGray)
             {
@@ -357,8 +382,8 @@ class GameScene: SKScene
     func MovePlayer(direction: String, distance: CGFloat)
     {
         
-        let moveLeft = SKAction.moveBy(x: -distance, y: 0, duration: 0.1)
-        let moveRight = SKAction.moveBy(x: distance, y: 0, duration: 0.1)
+        let moveLeft = SKAction.moveBy(x: -distance, y: 0, duration: 0.075)
+        let moveRight = SKAction.moveBy(x: distance, y: 0, duration: 0.075)
         
         if !(player.hasActions())
         {
@@ -366,12 +391,52 @@ class GameScene: SKScene
             {
                 player.run(moveLeft)
                 
-                
+                if player.texture != playerTextures[2]
+                {
+                    player.texture = playerTextures[2]
+                    
+                } else if player.texture != playerTextures[4]
+                {
+                    player.texture = playerTextures[4]
+                }
+                    
             } else if direction == "left"
             {
                 player.run(moveRight)
+                
+                if player.texture != playerTextures[3]
+                {
+                    player.texture = playerTextures[3]
+                    
+                } else if player.texture != playerTextures[5]
+                {
+                    player.texture = playerTextures[5]
+                }
             }
         }
         
+    }
+    
+    func changeToIdleTexture()
+    {
+        if !(player.hasActions())
+        {
+           DispatchQueue.main.asyncAfter(deadline: .now() + 1)
+            { [self] in
+                
+                if !(player.hasActions())
+                {
+                    if player.texture == playerTextures[2] || player.texture == playerTextures[4]
+                    {
+                        player.texture = playerTextures[0]
+                        
+                    } else if player.texture == playerTextures[3] || player.texture == playerTextures[5]
+                    {
+                        player.texture = playerTextures[1]
+                    }
+                }
+                
+            }
+        }
     }
 }

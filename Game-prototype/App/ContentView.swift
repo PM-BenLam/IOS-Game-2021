@@ -17,7 +17,6 @@ struct ContentView: View
         case .gameView:
             GameView(currentPage: $currentPage)
                 .transition(.opacity)
-        
         }
     }
 }
