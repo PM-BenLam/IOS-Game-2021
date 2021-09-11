@@ -6,18 +6,21 @@ class GameManager: ObservableObject
 {
     static let sharedInstance = GameManager()
     @Published var gameIsOver = false
-    @Published var gameLevel = 1
+    @Published var gameLevel: Int = 1
+    @Published var playerLives: Int = 3
+    
     
     func reset()
     {
         gameIsOver = false
         gameLevel = 1
+        playerLives = 3
     }
     
     private init() { }
 }
 
-class GameScene: SKScene
+class GameScene: SKScene, SKPhysicsContactDelegate
 {
     let gameManager = GameManager.sharedInstance
 
@@ -51,6 +54,7 @@ class GameScene: SKScene
 
     func createPlayer()
     {
+        player.name = "player"
         player.zPosition = 2
         player.position = CGPoint(x: frame.midX, y: frame.midY)
         player.texture = playerTextures[1]
@@ -59,7 +63,7 @@ class GameScene: SKScene
         player.physicsBody?.mass = 1;
         player.physicsBody?.allowsRotation = false;
         player.physicsBody?.affectedByGravity = true;
-        
+          
         addChild(player)
     }
     
@@ -99,46 +103,7 @@ class GameScene: SKScene
     }
     
     let backgroundLayer = SKNode()
-    
-    let backgroundTexture = SKTexture(imageNamed: "background")
-    let backgrounds = [SKSpriteNode(imageNamed: "background"), SKSpriteNode(imageNamed: "background")]
-    
-    var background0StartPosition: CGPoint = CGPoint.zero
-    var background1StartPosition: CGPoint = CGPoint.zero
-   
-    func createBackground()
-    {
-        let topSky = SKSpriteNode(color: UIColor(hue: 0.55, saturation: 0.14, brightness: 0.97, alpha: 1), size: CGSize(width: frame.width * 2, height: frame.height * 0.67))
-            topSky.anchorPoint = CGPoint(x: 0.5, y: 1)
 
-        let bottomSky = SKSpriteNode(color: UIColor(hue: 0.55, saturation: 0.16, brightness: 0.96, alpha: 1), size: CGSize(width: frame.width * 2, height: frame.height * 0.33))
-            bottomSky.anchorPoint = CGPoint(x: 0.5, y: 1)
-
-        topSky.position = CGPoint(x: frame.midX, y: frame.height)
-        bottomSky.position = CGPoint(x: frame.midX, y: bottomSky.frame.height)
-
-        backgroundLayer.addChild(topSky)
-        backgroundLayer.addChild(bottomSky)
-
-        bottomSky.zPosition = -40
-        topSky.zPosition = -40
-        
-        for background in backgrounds
-        {
-            background.zPosition = -30
-            background.anchorPoint = CGPoint.zero
-               
-            backgroundLayer.addChild(background)
-        }
-        
-        backgrounds[0].position = CGPoint(x: 0, y: 100)
-        
-        backgrounds[1].position = CGPoint(x: backgroundTexture.size().width, y: 100)
-        
-        addChild(backgroundLayer)
-        
-    }
-    
     var tileArray: [SKSpriteNode] = []
     
     func createLevelMap(fileName: String, tileMapName: String)
@@ -150,6 +115,7 @@ class GameScene: SKScene
     }
     
     var portal = SKNode()
+    var CCTVCamera = SKNode()
     
     func addPhysicBodyToTileMap(tileMap: SKTileMapNode)
     {
@@ -170,21 +136,25 @@ class GameScene: SKScene
                     
                     tileNode.position = CGPoint(x: x, y: y)
                     
-                    if tileNode.texture?.description != "<SKTexture> 'portal' (16 x 32)"
+                    if tileNode.texture?.description == "<SKTexture> 'portal' (16 x 32)"
+                    {
+                        portal = tileNode
+                        
+                    } else if tileNode.texture?.description == "<SKTexture> 'CCTVCamera' (16 x 16)"
+                    {
+                        CCTVCamera = tileNode
+                    } else
                     {
                         tileNode.physicsBody = SKPhysicsBody(texture: tileTexture, size: tileTexture.size())
                             
                         tileNode.physicsBody?.isDynamic = false
                         tileNode.physicsBody?.affectedByGravity = false
-                            
-                    } else
-                    {
-                        portal = tileNode
+                        
                     }
                     
-                    tileNode.move(toParent: self)
-                    
                     tileArray.append(tileNode)
+                    
+                    tileNode.move(toParent: self)
                 }
             }
         }
@@ -200,21 +170,38 @@ class GameScene: SKScene
         self.camera = cameraNode
     }
     
+    let heartIconTextures = [
+        SKTexture(imageNamed: "heart"),
+        SKTexture(imageNamed: "heart2"),
+        SKTexture(imageNamed: "heart3")
+    ]
+    
+    let heartIcon = SKSpriteNode(texture: SKTexture(imageNamed: "heart3"))
+    
     /// initialization
     override func didMove(to view: SKView)
     {
+        
+        heartIcon.position = CGPoint(x: 0, y: 18)
+        
+        player.addChild(heartIcon)
+        
+        UILayer.zPosition = 1000
+        
         self.view?.isMultipleTouchEnabled = true
         
         physicsBody = SKPhysicsBody()
         
-        createBackground()
+        physicsWorld.contactDelegate = self
+        
+        addChild(backgroundLayer)
         
         createController()
         
         createPlayer()
         
         createCamera()
-    
+        
     }
     
     var leftButtonOnTouch = false
@@ -226,6 +213,8 @@ class GameScene: SKScene
         cameraStartPosition = camera?.position ?? CGPoint.zero
         
         showPauseScreen()
+        
+        updateLivesCount()
         
         changeToIdleTexture()
         
@@ -246,7 +235,6 @@ class GameScene: SKScene
         {
             let location = touch.location(in: self)
             
-            print(location.debugDescription)
             if let node = self.atPoint(location) as? SKSpriteNode
             {
                 let jumpForce = CGVector(dx: 0, dy: 400)
@@ -342,19 +330,7 @@ class GameScene: SKScene
                 createStopScreen()
             }
             
-            for node in self.children
-            {
-                if let spriteNode = node as? SKSpriteNode
-                {
-                    if spriteNode != stopSymbol && spriteNode != transparentGray && !tileArray.contains(spriteNode)
-                    {
-                        spriteNode.physicsBody?.isResting = true
-                        spriteNode.physicsBody?.isDynamic = false
-                        spriteNode.isPaused = true
-                    }
-                }
-                
-            }
+            togglePause(status: true)
                 
         } else
         {
@@ -364,16 +340,22 @@ class GameScene: SKScene
                 transparentGray.removeFromParent()
             }
             
-            for node in self.children
+            togglePause(status: false)
+        }
+    }
+    
+    func togglePause(status: Bool)
+    {
+        for node in self.children
+        {
+            if node != stopSymbol && node != transparentGray
             {
-                if let spriteNode = node as? SKSpriteNode
+                if status == true
                 {
-                    if spriteNode != stopSymbol && spriteNode != transparentGray && !tileArray.contains(spriteNode)
-                    {
-                        spriteNode.physicsBody?.isResting = false
-                        spriteNode.physicsBody?.isDynamic = true
-                        spriteNode.isPaused = false
-                    }
+                    node.isPaused = true
+                } else
+                {
+                    node.isPaused = false
                 }
             }
         }
@@ -435,8 +417,98 @@ class GameScene: SKScene
                         player.texture = playerTextures[1]
                     }
                 }
-                
             }
         }
     }
+    
+    func loadBackgroundGIF(withName: String)
+    {
+        
+        func load(imageURL: URL) -> [SKTexture]
+        {
+            guard let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, nil) else { return [] }
+       
+            let count = CGImageSourceGetCount(imageSource)
+            var images: [CGImage] = []
+
+            for i in 0..<count
+            {
+                guard let img = CGImageSourceCreateImageAtIndex(imageSource, i, nil) else { continue }
+                images.append(img)
+            }
+
+            return images.map { SKTexture(cgImage: $0) }
+        }
+        
+        
+        if let imageURL = Bundle.main.url(forResource: withName, withExtension: "gif")
+        {
+            
+            let backgroundTextures = load(imageURL: imageURL)
+                        
+            let backgroundImage = SKSpriteNode(texture: backgroundTextures[0])
+           
+            backgroundImage.size = CGSize(width: frame.width * 1.5, height: frame.height * 1.5)
+            backgroundImage.position = CGPoint(x: frame.midX, y: frame.midY)
+            
+            backgroundLayer.addChild(backgroundImage)
+            
+            backgroundImage.run(SKAction.repeatForever(SKAction.animate(with: backgroundTextures, timePerFrame: 1)))
+        }
+        
+        
+    }
+    
+    func loadBackground(withName: String, scale: CGFloat)
+    {
+        let backgroundImage = SKSpriteNode(imageNamed: withName)
+        
+        backgroundImage.position = CGPoint(x: frame.midX, y: frame.midY)
+        backgroundImage.size = CGSize(width: backgroundImage.size.width * scale, height: backgroundImage.size.height * scale)
+        backgroundImage.zPosition = -10
+        backgroundLayer.addChild(backgroundImage)
+        
+    }
+    
+    func updateLivesCount()
+    {
+        let iconScaling: CGFloat = 0.7
+        switch gameManager.playerLives
+        {
+        case 0:
+            gameManager.gameIsOver = true
+            break
+  
+        case 1:
+            if heartIcon.texture != heartIconTextures[0]
+            {
+                heartIcon.texture = heartIconTextures[0]
+                heartIcon.size = CGSize(width: heartIconTextures[0].size().width * iconScaling, height: heartIconTextures[0].size().height * iconScaling)
+            }
+            break
+            
+        case 2:
+            if heartIcon.texture != heartIconTextures[1]
+            {
+                heartIcon.texture = heartIconTextures[1]
+                heartIcon.size = CGSize(width: heartIconTextures[1].size().width * iconScaling, height: heartIconTextures[1].size().height * iconScaling)
+                
+            }
+            break
+            
+        case 3:
+            if heartIcon.texture != heartIconTextures[2]
+            {
+                heartIcon.texture = heartIconTextures[2]
+                heartIcon.size = CGSize(width: heartIconTextures[2].size().width * iconScaling, height: heartIconTextures[2].size().height * iconScaling)
+            }
+            break
+            
+        default:
+            break
+        }
+        
+    }
+  
 }
+
