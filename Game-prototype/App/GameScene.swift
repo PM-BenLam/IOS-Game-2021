@@ -8,6 +8,7 @@ class GameManager: ObservableObject
     @Published var gameIsOver = false
     @Published var gameLevel: Int = 1
     @Published var playerLives: Int = 3
+    var tutorialFinished = false
     
     
     func reset()
@@ -31,11 +32,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     
     func createStopScreen()
     {
-        stopSymbol.zPosition = 210
+        stopSymbol.zPosition = 10010
         stopSymbol.size = CGSize(width: 50, height: 50)
         stopSymbol.position = camera?.position ?? CGPoint(x: frame.midX, y: frame.midY)
         
-        transparentGray.zPosition = 200
+        transparentGray.zPosition = 10000
         transparentGray.size = frame.size
         transparentGray.position = camera?.position ?? CGPoint(x: frame.midX, y: frame.midY)
         
@@ -115,7 +116,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     }
     
     var portal = SKNode()
-    var CCTVCamera = SKNode()
+    var CCTVCameras = [SKNode()]
     
     func addPhysicBodyToTileMap(tileMap: SKTileMapNode)
     {
@@ -142,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                         
                     } else if tileNode.texture?.description == "<SKTexture> 'CCTVCamera' (16 x 16)"
                     {
-                        CCTVCamera = tileNode
+                        CCTVCameras.append(tileNode)
                     } else
                     {
                         tileNode.physicsBody = SKPhysicsBody(texture: tileTexture, size: tileTexture.size())
@@ -177,7 +178,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     ]
     
     let heartIcon = SKSpriteNode(texture: SKTexture(imageNamed: "heart3"))
-    
+
     /// initialization
     override func didMove(to view: SKView)
     {
@@ -228,7 +229,85 @@ class GameScene: SKScene, SKPhysicsContactDelegate
             MovePlayer(direction: "left", distance: 10)
         }
     }
-
+    
+    var tutorialPageNo = 1
+    let dialogBox = SKSpriteNode(imageNamed: "tutorial1")
+    
+    let leftSlot = SKSpriteNode(imageNamed: "lastPageButton")
+    let rightSlot = SKSpriteNode(imageNamed: "nextPageButton")
+    
+    
+    func createTutorial()
+    {
+        
+        dialogBox.position = CGPoint(x: frame.midX, y: frame.midY)
+        
+        if let textureSize = dialogBox.texture?.size()
+        {
+            dialogBox.size = CGSize(width: textureSize.width / 2, height: textureSize.height / 2)
+        }
+        dialogBox.zPosition = 10000
+        
+        UILayer.addChild(dialogBox)
+        
+        leftSlot.position = CGPoint(x: frame.midX - dialogBox.size.height * 0.2, y: frame.midY - dialogBox.size.height * 0.35)
+        leftSlot.zPosition = 10010
+        
+        leftSlot.size = CGSize(width: leftSlot.size.width * 0.6, height: leftSlot.size.height * 0.6)
+        leftSlot.texture = nil
+        
+        UILayer.addChild(leftSlot)
+        
+        
+        rightSlot.position = CGPoint(x: frame.midX + dialogBox.size.height * 0.2, y: frame.midY - dialogBox.size.height * 0.35)
+        rightSlot.zPosition = 10010
+        
+        rightSlot.size = CGSize(width: rightSlot.size.width * 0.6, height: rightSlot.size.height * 0.6)
+        leftSlot.texture = nil
+        
+        UILayer.addChild(rightSlot)
+        
+    }
+    
+    func updateTutorial()
+    {
+        switch tutorialPageNo
+        {
+        case _ where gameManager.tutorialFinished == true:
+            dialogBox.texture = nil
+            leftSlot.texture = nil
+            rightSlot.texture = nil
+            break
+            
+        case 1:
+            
+            dialogBox.texture = SKTexture(imageNamed: "tutorial1")
+            
+            rightSlot.texture = SKTexture(imageNamed: "nextPageButton")
+            rightSlot.name = "nextPageButton"
+            
+            leftSlot.name = nil
+            leftSlot.texture = nil
+            
+            break
+            
+        case 2:
+            dialogBox.texture? = SKTexture(imageNamed: "tutorial2")
+            
+            
+            leftSlot.texture = SKTexture(imageNamed: "lastPageButton")
+            leftSlot.name = "lastPageButton"
+            
+            rightSlot.texture = SKTexture(imageNamed: "finishButton")
+            rightSlot.name = "finishButton"
+            
+            break
+            
+        default:
+            break
+        }
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         for touch in touches
@@ -237,10 +316,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate
             
             if let node = self.atPoint(location) as? SKSpriteNode
             {
-                let jumpForce = CGVector(dx: 0, dy: 400)
+                if node.name == "nextPageButton"
+                {
+                    tutorialPageNo += 1
+                }
+                
+                if node.name == "lastPageButton"
+                {
+                    tutorialPageNo -= 1
+                }
+                
+                if node.name == "finishButton"
+                {
+                    UILayer.removeChildren(in: [leftSlot, rightSlot, dialogBox])
+                    gameManager.tutorialFinished = true
+                }
+                
                 
                 if node == jumpButton[0] || node == jumpButton[1]
                 {
+                    let jumpForce = CGVector(dx: 0, dy: 400)
+                    
                     player.physicsBody?.applyImpulse(jumpForce)
                 }
                 
@@ -257,6 +353,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
  
             }
         }
+      
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
@@ -330,7 +427,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                 createStopScreen()
             }
             
-            togglePause(status: true)
+            togglePause(status: true, exception: [stopSymbol, transparentGray])
                 
         } else
         {
@@ -340,15 +437,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                 transparentGray.removeFromParent()
             }
             
-            togglePause(status: false)
+            togglePause(status: false, exception: [stopSymbol, transparentGray])
         }
     }
     
-    func togglePause(status: Bool)
+    func togglePause(status: Bool, exception: [SKNode])
     {
         for node in self.children
         {
-            if node != stopSymbol && node != transparentGray
+            if !exception.contains(node)
             {
                 if status == true
                 {
@@ -448,7 +545,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                         
             let backgroundImage = SKSpriteNode(texture: backgroundTextures[0])
            
-            backgroundImage.size = CGSize(width: frame.width * 1.5, height: frame.height * 1.5)
+            backgroundImage.size = CGSize(width: frame.width * 1.3, height: frame.height * 1.3
+            )
             backgroundImage.position = CGPoint(x: frame.midX, y: frame.midY)
             
             backgroundLayer.addChild(backgroundImage)
