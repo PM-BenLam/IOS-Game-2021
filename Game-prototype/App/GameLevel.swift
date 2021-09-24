@@ -4,9 +4,6 @@ import SwiftUI
 
 class Level1: GameScene
 {
-    
-   
-    
     func createCCTVCamera()
     {
         for CCTVCamera in CCTVCameras
@@ -44,12 +41,31 @@ class Level1: GameScene
         rotateCone()
         
         updateTutorial()
+        
+        for phone in phones
+        {
+            if let phoneSprite = phone as? SKSpriteNode
+            {
+                if phoneSprite.contains(player.position)
+                {
+                    gameManager.situation1Finished = false
+                    gameManager.situation1Triggered = true
+                    phoneSprite.texture = nil
+                    
+                    phone.position = CGPoint(x: 1000, y: 1000)
+                    
+                }
+            }
+           
+        }
+        
     
         if let portalSprite = portal as? SKSpriteNode
         {
             if portalSprite.contains(player.position)
             {
-                gameManager.gameLevel = 2
+                gameManager.gameWon = true
+                
             }
         }
     }
@@ -97,7 +113,18 @@ class Level1: GameScene
                 
                 if detectionCount >= 2
                 {
-                    gameManager.playerLives -= 1
+                    if gameManager.playerInvincible == false
+                    {
+                        gameManager.playerLives -= 1
+                        gameManager.playerInvincible = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3)
+                        {
+                            
+                            self.gameManager.playerInvincible = false
+                        }
+                    }
+                    
+                    
                 }
                 
             }

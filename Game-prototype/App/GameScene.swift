@@ -6,16 +6,24 @@ class GameManager: ObservableObject
 {
     static let sharedInstance = GameManager()
     @Published var gameIsOver = false
-    @Published var gameLevel: Int = 1
+    @Published var gameWon = false
     @Published var playerLives: Int = 3
+    var shouldTiltScreen = false
+    var playerInvincible = false
     var tutorialFinished = false
+    var situation1Triggered = false
+    var situation1Finished = false
     
     
     func reset()
     {
         gameIsOver = false
-        gameLevel = 1
+        gameWon = false
         playerLives = 3
+        playerInvincible = false
+        tutorialFinished = false
+        situation1Triggered = false
+        situation1Finished = false
     }
     
     private init() { }
@@ -116,6 +124,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     }
     
     var portal = SKNode()
+    var phones = [SKNode()]
     var CCTVCameras = [SKNode()]
     
     func addPhysicBodyToTileMap(tileMap: SKTileMapNode)
@@ -140,6 +149,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                     if tileNode.texture?.description == "<SKTexture> 'portal' (16 x 32)"
                     {
                         portal = tileNode
+                        
+                    } else if tileNode.texture?.description == "<SKTexture> 'phone' (32 x 32)"
+                    {
+                        phones.append(tileNode)
                         
                     } else if tileNode.texture?.description == "<SKTexture> 'CCTVCamera' (16 x 16)"
                     {
@@ -178,11 +191,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     ]
     
     let heartIcon = SKSpriteNode(texture: SKTexture(imageNamed: "heart3"))
-
+    
+    
     /// initialization
     override func didMove(to view: SKView)
     {
-        
         heartIcon.position = CGPoint(x: 0, y: 18)
         
         player.addChild(heartIcon)
@@ -271,12 +284,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate
     
     func updateTutorial()
     {
+        
         switch tutorialPageNo
         {
+            
+        case _ where gameManager.situation1Triggered == true && gameManager.situation1Finished == false:
+            
+            dialogBox.texture = SKTexture(imageNamed: "situation1")
+            
+            leftSlot.texture = SKTexture(imageNamed: "noContactButton")
+            leftSlot.name = "noContactButton"
+            
+            rightSlot.texture = SKTexture(imageNamed: "contactButton")
+            rightSlot.name = "contactButton"
+            break
+            
         case _ where gameManager.tutorialFinished == true:
+            
             dialogBox.texture = nil
             leftSlot.texture = nil
             rightSlot.texture = nil
+            
             break
             
         case 1:
@@ -293,6 +321,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate
             
         case 2:
             dialogBox.texture? = SKTexture(imageNamed: "tutorial2")
+            
+            
+            leftSlot.texture = SKTexture(imageNamed: "lastPageButton")
+            leftSlot.name = "lastPageButton"
+            
+            rightSlot.texture = SKTexture(imageNamed: "nextPageButton")
+            rightSlot.name = "nextPageButton"
+            
+            break
+            
+        case 3:
+            dialogBox.texture? = SKTexture(imageNamed: "tutorial3")
             
             
             leftSlot.texture = SKTexture(imageNamed: "lastPageButton")
@@ -328,8 +368,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                 
                 if node.name == "finishButton"
                 {
-                    UILayer.removeChildren(in: [leftSlot, rightSlot, dialogBox])
                     gameManager.tutorialFinished = true
+                }
+                
+                if node.name == "contactButton"
+                {
+                    gameManager.situation1Finished = true
+                    gameManager.situation1Triggered = false
+                    gameManager.playerLives = 3
+                    gameManager.playerInvincible = true
+                   
+                    
+                    let shield = SKSpriteNode(imageNamed: "shield")
+                    shield.position = CGPoint.zero
+                    player.addChild(shield)
+                    
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10)
+                    { [self] in
+                        
+                        gameManager.playerInvincible = false
+                        player.removeChildren(in: [shield])
+                        
+                    }
+                    
+                }
+                
+                if node.name == "noContactButton"
+                {
+                    gameManager.situation1Triggered = false
+                    gameManager.situation1Finished = true
                 }
                 
                 
@@ -343,6 +411,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate
                 if node == leftButton
                 {
                     leftButtonOnTouch = true
+
                 }
                 
                 if node == rightButton
