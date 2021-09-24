@@ -316,7 +316,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Game-prototype/Other/Preview Content\"";
-				DEVELOPMENT_TEAM = 2N2PRGUZ79;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Game-prototype/Other/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -340,7 +340,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Game-prototype/Other/Preview Content\"";
-				DEVELOPMENT_TEAM = 2N2PRGUZ79;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Game-prototype/Other/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
